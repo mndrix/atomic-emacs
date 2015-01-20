@@ -1,3 +1,4 @@
+{CompositeDisposable} = require 'atom'
 CursorTools = require './cursor-tools'
 Mark = require './mark'
 
@@ -22,44 +23,49 @@ deactivateCursors = (editor) ->
 
 module.exports =
   Mark: Mark
+  disposables: new CompositeDisposable
 
-  attachInstance: (editorView, editor) ->
-    editorView._atomicEmacs ?= new AtomicEmacs(editorView, editor)
+  attachInstance: (editor) ->
+    new AtomicEmacs(null, editor)
 
   activate: ->
-    atom.workspaceView.eachEditorView (editorView) ->
-      atomicEmacs = new AtomicEmacs(editorView, editorView.editor)
-      editorView.command "atomic-emacs:upcase-region", (event) => atomicEmacs.upcaseRegion(event)
-      editorView.command "atomic-emacs:downcase-region", (event) => atomicEmacs.downcaseRegion(event)
-      editorView.command "atomic-emacs:open-line", (event) => atomicEmacs.openLine(event)
-      editorView.command "atomic-emacs:transpose-chars", (event) => atomicEmacs.transposeChars(event)
-      editorView.command "atomic-emacs:transpose-words", (event) => atomicEmacs.transposeWords(event)
-      editorView.command "atomic-emacs:transpose-lines", (event) => atomicEmacs.transposeLines(event)
-      editorView.command "atomic-emacs:mark-whole-buffer", (event) => atomicEmacs.markWholeBuffer(event)
-      editorView.command "atomic-emacs:set-mark", (event) => atomicEmacs.setMark(event)
-      editorView.command "atomic-emacs:exchange-point-and-mark", (event) => atomicEmacs.exchangePointAndMark(event)
-      editorView.command "atomic-emacs:copy", (event) => atomicEmacs.copy(event)
-      editorView.command "atomic-emacs:forward-char", (event) => atomicEmacs.forwardChar(event)
-      editorView.command "atomic-emacs:backward-char", (event) => atomicEmacs.backwardChar(event)
-      editorView.command "atomic-emacs:forward-word", (event) => atomicEmacs.forwardWord(event)
-      editorView.command "atomic-emacs:kill-word", (event) => atomicEmacs.killWord(event)
-      editorView.command "atomic-emacs:next-line", (event) => atomicEmacs.nextLine(event)
-      editorView.command "atomic-emacs:previous-line", (event) => atomicEmacs.previousLine(event)
-      editorView.command "atomic-emacs:beginning-of-buffer", (event) => atomicEmacs.beginningOfBuffer(event)
-      editorView.command "atomic-emacs:end-of-buffer", (event) => atomicEmacs.endOfBuffer(event)
-      editorView.command "atomic-emacs:scroll-up", (event) => atomicEmacs.scrollUp(event)
-      editorView.command "atomic-emacs:scroll-down", (event) => atomicEmacs.scrollDown(event)
-      editorView.command "atomic-emacs:backward-paragraph", (event) => atomicEmacs.backwardParagraph(event)
-      editorView.command "atomic-emacs:forward-paragraph", (event) => atomicEmacs.forwardParagraph(event)
-      editorView.command "atomic-emacs:backward-word", (event) => atomicEmacs.backwardWord(event)
-      editorView.command "atomic-emacs:backward-kill-word", (event) => atomicEmacs.backwardKillWord(event)
-      editorView.command "atomic-emacs:just-one-space", (event) => atomicEmacs.justOneSpace(event)
-      editorView.command "atomic-emacs:delete-horizontal-space", (event) => atomicEmacs.deleteHorizontalSpace(event)
-      editorView.command "atomic-emacs:recenter-top-bottom", (event) => atomicEmacs.recenterTopBottom(event)
-      editorView.command "core:cancel", (event) => atomicEmacs.keyboardQuit(event)
+    atom.workspace.observeTextEditors (editor) =>
+      atomicEmacs = new AtomicEmacs(null, editor)
+      @disposables.add atom.commands.add 'atom-text-editor',
+          "atomic-emacs:backward-char": (event) -> atomicEmacs.backwardChar(event)
+          "atomic-emacs:backward-kill-word": (event) -> atomicEmacs.backwardKillWord(event)
+          "atomic-emacs:backward-paragraph": (event) -> atomicEmacs.backwardParagraph(event)
+          "atomic-emacs:backward-word": (event) -> atomicEmacs.backwardWord(event)
+          "atomic-emacs:beginning-of-buffer": (event) -> atomicEmacs.beginningOfBuffer(event)
+          "atomic-emacs:copy": (event) -> atomicEmacs.copy(event)
+          "atomic-emacs:delete-horizontal-space": (event) -> atomicEmacs.deleteHorizontalSpace(event)
+          "atomic-emacs:downcase-region": (event) -> atomicEmacs.downcaseRegion(event)
+          "atomic-emacs:end-of-buffer": (event) -> atomicEmacs.endOfBuffer(event)
+          "atomic-emacs:exchange-point-and-mark": (event) -> atomicEmacs.exchangePointAndMark(event)
+          "atomic-emacs:forward-char": (event) -> atomicEmacs.forwardChar(event)
+          "atomic-emacs:forward-paragraph": (event) -> atomicEmacs.forwardParagraph(event)
+          "atomic-emacs:forward-word": (event) -> atomicEmacs.forwardWord(event)
+          "atomic-emacs:just-one-space": (event) -> atomicEmacs.justOneSpace(event)
+          "atomic-emacs:kill-word": (event) -> atomicEmacs.killWord(event)
+          "atomic-emacs:mark-whole-buffer": (event) -> atomicEmacs.markWholeBuffer(event)
+          "atomic-emacs:next-line": (event) -> atomicEmacs.nextLine(event)
+          "atomic-emacs:open-line": (event) -> atomicEmacs.openLine(event)
+          "atomic-emacs:previous-line": (event) -> atomicEmacs.previousLine(event)
+          "atomic-emacs:recenter-top-bottom": (event) -> atomicEmacs.recenterTopBottom(event)
+          "atomic-emacs:scroll-down": (event) -> atomicEmacs.scrollDown(event)
+          "atomic-emacs:scroll-up": (event) -> atomicEmacs.scrollUp(event)
+          "atomic-emacs:set-mark": (event) -> atomicEmacs.setMark(event)
+          "atomic-emacs:transpose-chars": (event) -> atomicEmacs.transposeChars(event)
+          "atomic-emacs:transpose-lines": (event) -> atomicEmacs.transposeLines(event)
+          "atomic-emacs:transpose-words": (event) -> atomicEmacs.transposeWords(event)
+          "atomic-emacs:upcase-region": (event) -> atomicEmacs.upcaseRegion(event)
+          "core:cancel": (event) -> atomicEmacs.keyboardQuit(event)
+
+  destroy: ->
+    @disposables.dispose()
 
 class AtomicEmacs
-  constructor: (@editorView, @editor) ->
+  constructor: (_, @editor) ->
 
   Mark: Mark
 
@@ -71,7 +77,7 @@ class AtomicEmacs
 
   openLine: (event) ->
     @editor.insertNewline()
-    @editor.moveCursorUp()
+    @editor.moveUp()
 
   transposeChars: (event) ->
     @editor.transpose()
@@ -98,7 +104,7 @@ class AtomicEmacs
         cursor.setBufferPosition(cursor.getBufferPosition())
 
   transposeLines: (event) ->
-    cursor = @editor.getCursor()
+    cursor = @editor.getLastCursor()
     row = cursor.getBufferRow()
 
     @editor.transact =>
@@ -159,22 +165,20 @@ class AtomicEmacs
       cursor.moveUp()
 
   scrollUp: (event) ->
-    firstRow = @editorView.getFirstVisibleScreenRow()
-    lastRow = @editorView.getLastVisibleScreenRow()
+    [firstRow,lastRow] = @editor.getVisibleRowRange()
     currentRow = @editor.cursors[0].getBufferRow()
     rowCount = (lastRow - firstRow) - (currentRow - firstRow)
 
-    @editorView.scrollToBufferPosition([lastRow * 2, 0])
-    @editor.moveCursorDown(rowCount)
+    @editor.scrollToBufferPosition([lastRow * 2, 0])
+    @editor.moveDown(rowCount)
 
   scrollDown: (event) ->
-    firstRow = @editorView.getFirstVisibleScreenRow()
-    lastRow = @editorView.getLastVisibleScreenRow()
+    [firstRow,lastRow] = @editor.getVisibleRowRange()
     currentRow = @editor.cursors[0].getBufferRow()
     rowCount = (lastRow - firstRow) - (lastRow - currentRow)
 
-    @editorView.scrollToBufferPosition([Math.floor(firstRow / 2), 0])
-    @editor.moveCursorUp(rowCount)
+    @editor.scrollToBufferPosition([Math.floor(firstRow / 2), 0])
+    @editor.moveUp(rowCount)
 
   backwardParagraph: (event) ->
     for cursor in @editor.getCursors()
@@ -188,14 +192,14 @@ class AtomicEmacs
       while currentRow == blankRow
         break if currentRow <= 0
 
-        @editor.moveCursorUp()
+        @editor.moveUp()
 
         currentRow = @editor.getCursorBufferPosition().row
         blankRange = cursorTools.locateBackward(/^\s+$|^\s*$/)
         blankRow = if blankRange then blankRange.start.row else 0
 
       rowCount = currentRow - blankRow
-      @editor.moveCursorUp(rowCount)
+      @editor.moveUp(rowCount)
 
   forwardParagraph: (event) ->
     lineCount = @editor.buffer.getLineCount() - 1
@@ -208,13 +212,13 @@ class AtomicEmacs
       blankRow = cursorTools.locateForward(/^\s+$|^\s*$/).start.row
 
       while currentRow == blankRow
-        @editor.moveCursorDown()
+        @editor.moveDown()
 
         currentRow = @editor.getCursorBufferPosition().row
         blankRow = cursorTools.locateForward(/^\s+$|^\s*$/).start.row
 
       rowCount = blankRow - currentRow
-      @editor.moveCursorDown(rowCount)
+      @editor.moveDown(rowCount)
 
   backwardKillWord: (event) ->
     @editor.transact =>
@@ -249,6 +253,6 @@ class AtomicEmacs
   recenterTopBottom: (event) ->
     minRow = Math.min((c.getBufferRow() for c in @editor.getCursors())...)
     maxRow = Math.max((c.getBufferRow() for c in @editor.getCursors())...)
-    minOffset = @editorView.pixelPositionForBufferPosition([minRow, 0])
-    maxOffset = @editorView.pixelPositionForBufferPosition([maxRow, 0])
-    @editorView.scrollTop((minOffset.top + maxOffset.top - @editorView.scrollView.height())/2)
+    minOffset = @editor.pixelPositionForBufferPosition([minRow, 0])
+    maxOffset = @editor.pixelPositionForBufferPosition([maxRow, 0])
+    @editor.setScrollTop((minOffset.top + maxOffset.top - @editor.getHeight())/2)
